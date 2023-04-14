@@ -1,91 +1,104 @@
-const API = 'https://pokeapi.co/api/v2/pokemon/';
-let users = [];
+const API = 'https://pokeapi.co/api/v2/pokemon/?limit=20';
+let pokemonDataArray = [];
 
-const $container = document.querySelector('.search-field');
-const $listContainer = document.querySelector('.users-list');
 const $field = document.querySelector('.field');
+fetchPokemonData();
 
-function isEmpty(e) {
-    if (e != undefined) {
-        return false;
+function generatePokemonList(pokemonDataArray) {
+
+
+// Получаем количество элементов массива
+    const count = pokemonDataArray.length;
+
+// Отображаем количество элементов в HTML-документе
+    const countElement = document.getElementById('count');
+    countElement.textContent = `Pokemons: ${count}`;
+
+
+    let temp = '';
+    if (pokemonDataArray.length) {
+        pokemonDataArray.forEach(pokemonData => {
+            temp += `<li>
+                <img src="${pokemonData.imageUrl}">
+                <a>${pokemonData.name[0].toUpperCase() + pokemonData.name.substring(1)}</a>
+                <p>Height: ${pokemonData.height}</p>
+                <p>Weight: ${pokemonData.weight}</p>
+                <button class="button" id="${pokemonData.id}">Delete</button>
+              </li>`;
+        });
+    } else {
+        temp += '<h1 class="NF">Pokemons not found!</h1>';
     }
-    return true;
+    const pokemonList = document.querySelector('.users-list');
+    pokemonList.innerHTML = temp;
+
 }
 
-function templateBuilder(list) {
-    let template = '';
-    if (!list.length) {
-        template = '<li><span>Not Found</span></li>';
+function fetchPokemonData() {
+    if (!localStorage.getItem('pokemonDataArray')) {
+        fetch('API')
+            .then(response => response.json())
+            .then(data => {
+                data.results.forEach(pokemon => {
+                    fetch(pokemon.url)
+                        .then(response => response.json())
+                        .then(pokemonData => {
+                            const imageUrl = pokemonData.sprites.front_default;
+                            const id = pokemonData.id;
+                            const name = pokemonData.name;
+                            const weight = pokemonData.weight;
+                            const height = pokemonData.height;
+
+                            // Создаем объект с данными покемона
+                            const pokemonDataObj = {
+                                id: id,
+                                name: name,
+                                weight: weight,
+                                height: height,
+                                imageUrl: imageUrl
+                            };
+
+                            // Добавляем объект с данными покемона в массив
+                            pokemonDataArray.push(pokemonDataObj);
+
+                            // Преобразуем массив в строку JSON и сохраняем в localStorage
+                            localStorage.setItem('pokemonDataArray', JSON.stringify(pokemonDataArray));
+                            generatePokemonList(JSON.parse(localStorage.getItem('pokemonDataArray')));
+                        });
+                });
+            });
     } else {
-        let i = 0;
-        list.forEach(element => {
-            i++
-            template += '<li><a class="item" id= ' + element.index + '>' + element.name + '</a><button class="button" id= ' + element.index + ' >Delete</button></li>'
-
-
-       console.log( JSON.parse(localStorage.getItem('pokemons')) )
-        });
+        generatePokemonList(JSON.parse(localStorage.getItem('pokemonDataArray')));
     }
-    $listContainer.innerHTML = template;
 }
 
 function filterController(query) {
-    let filteredUsers = JSON.parse(localStorage.getItem('pokemons')).filter((el) => {
+    let filteredUsers = JSON.parse(localStorage.getItem('pokemonDataArray')).filter((el) => {
         return ~el.name.toLowerCase().indexOf(query.toLowerCase());
     });
-    templateBuilder(filteredUsers);
+    generatePokemonList(filteredUsers);
 
 }
 
-function deleteElement(e) {
-    let id = e-1;
-    let pokemons = JSON.parse(localStorage.getItem('pokemons'));
-    pokemons.splice(id, 1);
-    localStorage.setItem('pokemons', JSON.stringify(pokemons));
-    templateBuilder(JSON.parse(localStorage.getItem('pokemons')));
+function removePokemonDataById(id) {
+    let pokemonDataArray = JSON.parse(localStorage.getItem('pokemonDataArray'));
+    pokemonDataArray = pokemonDataArray.filter(pokemonData => pokemonData.id != id);
+    localStorage.setItem('pokemonDataArray', JSON.stringify(pokemonDataArray));
+    generatePokemonList(JSON.parse(localStorage.getItem('pokemonDataArray')));
     $field.value = "";
-
-    console.log("Del " + id  + name);
+    console.log(id + " id del");
 }
 
-fetch(API)
-    .then((responce) => {
-        return responce.json();
-    })
-    .then((data) => {
-        users = data.results;
-        if (isEmpty(JSON.parse(localStorage.getItem('pokemons')))) {
-            localStorage.setItem('pokemons', JSON.stringify(users));
-        } else {
-           // console.log("Load complete");
-        }
-
-
-        templateBuilder(JSON.parse(localStorage.getItem('pokemons')));
-    });
+document.addEventListener('click', function (e) {
+    if (e.target && e.target.classList.contains('button')) {
+        const pokemonId = e.target.id;
+        pokemonDataArray = removePokemonDataById(pokemonId);
+        console.log(pokemonId + " id find");
+    }
+});
 
 $field.addEventListener('input', (e) => {
     let query = e.target.value;
     filterController(query);
 });
-
-window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('item')) {
-        let target = e.target.innerText;
-        $field.value = target;
-        filterController(target);
-    }
-});
-
-document.addEventListener("click", function (e) {
-    if (e.target.classList.contains("button") || e.target.closest(".button"))
-        deleteElement(e.target.id);
-});
-
-$field.addEventListener('focus', () => {
-    $container.classList.add('active');
-});
-$field.addEventListener('blur', () => {
-    $container.classList.remove('active');
-});
-
+// Получаем массив из localStorage
