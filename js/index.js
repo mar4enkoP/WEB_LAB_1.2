@@ -2,36 +2,33 @@ const API = 'https://pokeapi.co/api/v2/pokemon/?limit=20';
 let pokemonDataArray = [];
 
 const $field = document.querySelector('.field');
+const $count = document.querySelector('.count');
+const $pokemonList = document.querySelector('.users-list');
+
 fetchPokemonData();
 
 function generatePokemonList(pokemonDataArray) {
-
-
-// Получаем количество элементов массива
     const count = pokemonDataArray.length;
-
-// Отображаем количество элементов в HTML-документе
-    const countElement = document.getElementById('count');
-    countElement.textContent = `Pokemons: ${count}`;
-
+    $count.textContent = 'Pokemons:' + count;
 
     let temp = '';
     if (pokemonDataArray.length) {
         pokemonDataArray.forEach(pokemonData => {
-            temp += `<li>
+            //Интерполяция строк
+            temp += `<li> 
                 <img src="${pokemonData.imageUrl}">
-                <a>${pokemonData.name[0].toUpperCase() + pokemonData.name.substring(1)}</a>
-                <p>Height: ${pokemonData.height}</p>
-                <p>Weight: ${pokemonData.weight}</p>
+                <a>${pokemonData.name}</a>
+                <span>Height: ${pokemonData.height}</span>
+                <span>Weight: ${pokemonData.weight}</span>
                 <button class="button" id="${pokemonData.id}">Delete</button>
               </li>`;
+            //Многострочные литералы
+            //temp+= '<li>' + '<a>'+pokemonData.name+'</a>' + '<span>' + 'Height:' + pokemonData.height + '</span>' + '</li>';
         });
     } else {
         temp += '<h1 class="NF">Pokemons not found!</h1>';
     }
-    const pokemonList = document.querySelector('.users-list');
-    pokemonList.innerHTML = temp;
-
+    $pokemonList.innerHTML = temp;
 }
 
 function fetchPokemonData() {
@@ -48,8 +45,6 @@ function fetchPokemonData() {
                             const name = pokemonData.name;
                             const weight = pokemonData.weight;
                             const height = pokemonData.height;
-
-                            // Создаем объект с данными покемона
                             const pokemonDataObj = {
                                 id: id,
                                 name: name,
@@ -57,11 +52,7 @@ function fetchPokemonData() {
                                 height: height,
                                 imageUrl: imageUrl
                             };
-
-                            // Добавляем объект с данными покемона в массив
                             pokemonDataArray.push(pokemonDataObj);
-
-                            // Преобразуем массив в строку JSON и сохраняем в localStorage
                             localStorage.setItem('pokemonDataArray', JSON.stringify(pokemonDataArray));
                             generatePokemonList(JSON.parse(localStorage.getItem('pokemonDataArray')));
                         });
@@ -77,7 +68,6 @@ function filterController(query) {
         return ~el.name.toLowerCase().indexOf(query.toLowerCase());
     });
     generatePokemonList(filteredUsers);
-
 }
 
 function removePokemonDataById(id) {
@@ -86,19 +76,16 @@ function removePokemonDataById(id) {
     localStorage.setItem('pokemonDataArray', JSON.stringify(pokemonDataArray));
     generatePokemonList(JSON.parse(localStorage.getItem('pokemonDataArray')));
     $field.value = "";
-    console.log(id + " id del");
 }
-
-document.addEventListener('click', function (e) {
-    if (e.target && e.target.classList.contains('button')) {
-        const pokemonId = e.target.id;
-        pokemonDataArray = removePokemonDataById(pokemonId);
-        console.log(pokemonId + " id find");
-    }
-});
 
 $field.addEventListener('input', (e) => {
     let query = e.target.value;
     filterController(query);
 });
-// Получаем массив из localStorage
+
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('button')) {
+        const pokemonId = e.target.id;
+        pokemonDataArray = removePokemonDataById(pokemonId);
+    }
+});

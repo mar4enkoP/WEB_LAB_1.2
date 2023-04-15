@@ -114,7 +114,7 @@ h1 {
     color: #2B2D30FF;
 }
 
-#count {
+.count {
     position: absolute;
     top: 10px;
     left: 10px;
@@ -123,4 +123,9 @@ h1 {
     color: #2b2d30ff;
     border-radius: 10px;
     font-weight: bold;
+}
+span{
+    color: black;
+    font-size: 15px;
+    padding-right: 20px;
 }
