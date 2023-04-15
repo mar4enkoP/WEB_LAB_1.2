@@ -36,7 +36,7 @@ function generatePokemonList(pokemonDataArray) {
 
 function fetchPokemonData() {
     if (!localStorage.getItem('pokemonDataArray')) {
-        fetch('API')
+        fetch(API)
             .then(response => response.json())
             .then(data => {
                 data.results.forEach(pokemon => {
